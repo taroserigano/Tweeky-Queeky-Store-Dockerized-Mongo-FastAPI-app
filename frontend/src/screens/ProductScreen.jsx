@@ -13,10 +13,7 @@ import {
   Form,
 } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-import {
-  useGetProductDetailsQuery,
-  useCreateReviewMutation,
-} from '../slices/productsApiSlice';
+import { useProductDetails, useCreateReview } from '../hooks/useProductQueries';
 import Rating from '../components/Rating';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
@@ -60,27 +57,29 @@ const ProductScreen = () => {
     isLoading,
     refetch,
     error,
-  } = useGetProductDetailsQuery(productId);
+  } = useProductDetails(productId);
 
   const { userInfo } = useSelector((state) => state.auth);
 
-  const [createReview, { isLoading: loadingProductReview }] =
-    useCreateReviewMutation();
+  const { mutate: createReview, isLoading: loadingProductReview } = useCreateReview();
 
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    try {
-      await createReview({
-        productId,
-        rating,
-        comment,
-      }).unwrap();
-      refetch();
-      toast.success('Review created successfully');
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
-    }
+    createReview(
+      { productId, rating: Number(rating), comment },
+      {
+        onSuccess: () => {
+          refetch();
+          toast.success('Review created successfully');
+          setRating(0);
+          setComment('');
+        },
+        onError: (err) => {
+          toast.error(err?.response?.data?.detail || err.message);
+        },
+      }
+    );
   };
 
   return (

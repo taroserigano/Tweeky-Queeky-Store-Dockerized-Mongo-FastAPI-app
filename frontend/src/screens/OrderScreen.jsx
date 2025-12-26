@@ -7,11 +7,11 @@ import { toast } from 'react-toastify';
 import Message from '../components/Message';
 import Loader from '../components/Loader';
 import {
-  useDeliverOrderMutation,
-  useGetOrderDetailsQuery,
-  useGetPaypalClientIdQuery,
-  usePayOrderMutation,
-} from '../slices/ordersApiSlice';
+  useOrderDetails,
+  usePayOrder,
+  usePayPalClientId,
+  useDeliverOrder,
+} from '../hooks/useOrderQueries';
 
 const OrderScreen = () => {
   const { id: orderId } = useParams();
@@ -21,12 +21,11 @@ const OrderScreen = () => {
     refetch,
     isLoading,
     error,
-  } = useGetOrderDetailsQuery(orderId);
+  } = useOrderDetails(orderId);
 
-  const [payOrder, { isLoading: loadingPay }] = usePayOrderMutation();
+  const { mutate: payOrder, isLoading: loadingPay } = usePayOrder();
 
-  const [deliverOrder, { isLoading: loadingDeliver }] =
-    useDeliverOrderMutation();
+  const { mutate: deliverOrder, isLoading: loadingDeliver } = useDeliverOrder();
 
   const { userInfo } = useSelector((state) => state.auth);
 
@@ -36,7 +35,7 @@ const OrderScreen = () => {
     data: paypal,
     isLoading: loadingPayPal,
     error: errorPayPal,
-  } = useGetPaypalClientIdQuery();
+  } = usePayPalClientId();
 
   useEffect(() => {
     if (!errorPayPal && !loadingPayPal && paypal.clientId) {
@@ -60,22 +59,29 @@ const OrderScreen = () => {
 
   function onApprove(data, actions) {
     return actions.order.capture().then(async function (details) {
-      try {
-        await payOrder({ orderId, details });
-        refetch();
-        toast.success('Order is paid');
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+      payOrder(
+        { orderId, details },
+        {
+          onSuccess: () => {
+            refetch();
+            toast.success('Order is paid');
+          },
+          onError: (err) => {
+            toast.error(err?.response?.data?.detail || err.message);
+          },
+        }
+      );
     });
   }
 
   // TESTING ONLY! REMOVE BEFORE PRODUCTION
   // async function onApproveTest() {
-  //   await payOrder({ orderId, details: { payer: {} } });
-  //   refetch();
-
-  //   toast.success('Order is paid');
+  //   payOrder({ orderId, details: { payer: {} } }, {
+  //     onSuccess: () => {
+  //       refetch();
+  //       toast.success('Order is paid');
+  //     },
+  //   });
   // }
 
   function onError(err) {
@@ -97,8 +103,15 @@ const OrderScreen = () => {
   }
 
   const deliverHandler = async () => {
-    await deliverOrder(orderId);
-    refetch();
+    deliverOrder(orderId, {
+      onSuccess: () => {
+        refetch();
+        toast.success('Order delivered');
+      },
+      onError: (err) => {
+        toast.error(err?.response?.data?.detail || err.message);
+      },
+    });
   };
 
   return isLoading ? (

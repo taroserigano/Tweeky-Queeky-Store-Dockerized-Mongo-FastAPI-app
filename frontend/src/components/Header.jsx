@@ -1,3 +1,26 @@
+/**
+ * Header Component
+ * 
+ * Main navigation bar with responsive design and user authentication state.
+ * Demonstrates best practices for:
+ * - Redux state management (cart, auth)
+ * - React Query mutations (logout)
+ * - Theme switching functionality
+ * - Conditional rendering based on user role
+ * 
+ * Features:
+ * - Cart badge with item count
+ * - User dropdown with profile/orders links
+ * - Admin dropdown (conditional)
+ * - Dark/Light theme toggle
+ * - Secure logout with cache cleanup
+ * 
+ * @component
+ * @param {Object} props
+ * @param {string} props.theme - Current theme ('light' or 'dark')
+ * @param {Function} props.onToggleTheme - Theme toggle handler
+ */
+
 import {
   Navbar,
   Nav,
@@ -9,31 +32,42 @@ import {
 import { FaShoppingCart, FaUser, FaMoon, FaSun } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { useLogoutMutation } from '../slices/usersApiSlice';
+import { useLogout } from '../hooks';
 import { logout } from '../slices/authSlice';
 import logo from '../assets/logo.svg';
 import { resetCart } from '../slices/cartSlice';
 
 const Header = ({ theme = 'light', onToggleTheme }) => {
+  // Access global state from Redux
   const { cartItems } = useSelector((state) => state.cart);
   const { userInfo } = useSelector((state) => state.auth);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [logoutApiCall] = useLogoutMutation();
+  // React Query mutation for logout
+  const { mutate: logoutApiCall } = useLogout();
 
+  /**
+   * Handle user logout
+   * Clears server session, React Query cache, Redux state, and localStorage
+   */
   const logoutHandler = async () => {
-    try {
-      await logoutApiCall().unwrap();
-      dispatch(logout());
-      // NOTE: here we need to reset cart state for when a user logs out so the next
-      // user doesn't inherit the previous users cart and shipping
-      dispatch(resetCart());
-      navigate('/login');
-    } catch (err) {
-      console.error(err);
-    }
+    logoutApiCall(
+      {},
+      {
+        onSuccess: () => {
+          // Clear Redux auth state
+          dispatch(logout());
+          // Reset cart to prevent data leakage to next user
+          dispatch(resetCart());
+          navigate('/login');
+        },
+        onError: (err) => {
+          console.error('Logout failed:', err);
+        },
+      }
+    );
   };
 
   return (

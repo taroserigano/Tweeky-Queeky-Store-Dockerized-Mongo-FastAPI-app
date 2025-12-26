@@ -5,44 +5,49 @@ import Message from '../../components/Message';
 import Loader from '../../components/Loader';
 import Paginate from '../../components/Paginate';
 import {
-  useGetProductsQuery,
-  useDeleteProductMutation,
-  useCreateProductMutation,
-} from '../../slices/productsApiSlice';
+  useProducts,
+  useDeleteProduct,
+  useCreateProduct,
+} from '../../hooks/useProductQueries';
 import { toast } from 'react-toastify';
 
 const ProductListScreen = () => {
   const { pageNumber } = useParams();
 
-  const { data, isLoading, error, refetch } = useGetProductsQuery({
-    pageNumber,
-  });
+  const { data, isLoading, error, refetch } = useProducts('', pageNumber);
 
-  const [deleteProduct, { isLoading: loadingDelete }] =
-    useDeleteProductMutation();
+  const { mutate: deleteProduct, isLoading: loadingDelete } = useDeleteProduct();
 
   const deleteHandler = async (id) => {
     if (window.confirm('Are you sure')) {
-      try {
-        await deleteProduct(id);
-        refetch();
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+      deleteProduct(id, {
+        onSuccess: () => {
+          refetch();
+          toast.success('Product deleted');
+        },
+        onError: (err) => {
+          toast.error(err?.response?.data?.detail || err.message);
+        },
+      });
     }
   };
 
-  const [createProduct, { isLoading: loadingCreate }] =
-    useCreateProductMutation();
+  const { mutate: createProduct, isLoading: loadingCreate } = useCreateProduct();
 
   const createProductHandler = async () => {
     if (window.confirm('Are you sure you want to create a new product?')) {
-      try {
-        await createProduct();
-        refetch();
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+      createProduct(
+        {},
+        {
+          onSuccess: () => {
+            refetch();
+            toast.success('Product created');
+          },
+          onError: (err) => {
+            toast.error(err?.response?.data?.detail || err.message);
+          },
+        }
+      );
     }
   };
 

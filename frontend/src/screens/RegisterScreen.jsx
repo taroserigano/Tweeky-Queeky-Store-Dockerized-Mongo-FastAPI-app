@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../components/Loader';
 import FormContainer from '../components/FormContainer';
 
-import { useRegisterMutation } from '../slices/usersApiSlice';
+import { useRegister } from '../hooks';
 import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
 
@@ -18,7 +18,7 @@ const RegisterScreen = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [register, { isLoading }] = useRegisterMutation();
+  const { mutate: register, isPending: isLoading } = useRegister();
 
   const { userInfo } = useSelector((state) => state.auth);
 
@@ -38,13 +38,18 @@ const RegisterScreen = () => {
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
     } else {
-      try {
-        const res = await register({ name, email, password }).unwrap();
-        dispatch(setCredentials({ ...res }));
-        navigate(redirect);
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+      register(
+        { name, email, password },
+        {
+          onSuccess: (res) => {
+            dispatch(setCredentials({ ...res }));
+            navigate(redirect);
+          },
+          onError: (err) => {
+            toast.error(err?.response?.data?.detail || err.message);
+          },
+        }
+      );
     }
   };
 

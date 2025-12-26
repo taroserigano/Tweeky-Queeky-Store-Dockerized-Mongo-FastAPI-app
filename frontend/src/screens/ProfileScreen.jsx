@@ -6,8 +6,8 @@ import { FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Message from '../components/Message';
 import Loader from '../components/Loader';
-import { useProfileMutation } from '../slices/usersApiSlice';
-import { useGetMyOrdersQuery } from '../slices/ordersApiSlice';
+import { useUpdateProfile } from '../hooks';
+import { useMyOrders } from '../hooks/useOrderQueries';
 import { setCredentials } from '../slices/authSlice';
 import { Link } from 'react-router-dom';
 
@@ -19,10 +19,10 @@ const ProfileScreen = () => {
 
   const { userInfo } = useSelector((state) => state.auth);
 
-  const { data: orders, isLoading, error } = useGetMyOrdersQuery();
+  const { data: orders, isLoading, error } = useMyOrders();
 
-  const [updateProfile, { isLoading: loadingUpdateProfile }] =
-    useProfileMutation();
+  const { mutate: updateProfile, isPending: loadingUpdateProfile } =
+    useUpdateProfile();
 
   useEffect(() => {
     setName(userInfo.name);
@@ -35,20 +35,25 @@ const ProfileScreen = () => {
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
     } else {
-      try {
-        const res = await updateProfile({
+      updateProfile(
+        {
           // NOTE: here we don't need the _id in the request payload as this is
           // not used in our controller.
           // _id: userInfo._id,
           name,
           email,
           password,
-        }).unwrap();
-        dispatch(setCredentials({ ...res }));
-        toast.success('Profile updated successfully');
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+        },
+        {
+          onSuccess: (res) => {
+            dispatch(setCredentials({ ...res }));
+            toast.success('Profile updated successfully');
+          },
+          onError: (err) => {
+            toast.error(err?.response?.data?.detail || err.message);
+          },
+        }
+      );
     }
   };
 

@@ -7,9 +7,9 @@ import FormContainer from '../../components/FormContainer';
 import { toast } from 'react-toastify';
 import { useParams } from 'react-router-dom';
 import {
-  useGetUserDetailsQuery,
-  useUpdateUserMutation,
-} from '../../slices/usersApiSlice';
+  useUserDetails,
+  useUpdateUser,
+} from '../../hooks';
 
 const UserEditScreen = () => {
   const { id: userId } = useParams();
@@ -22,22 +22,27 @@ const UserEditScreen = () => {
     isLoading,
     error,
     refetch,
-  } = useGetUserDetailsQuery(userId);
+  } = useUserDetails(userId);
 
-  const [updateUser, { isLoading: loadingUpdate }] = useUpdateUserMutation();
+  const { mutate: updateUser, isPending: loadingUpdate } = useUpdateUser();
 
   const navigate = useNavigate();
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    try {
-      await updateUser({ userId, name, email, isAdmin });
-      toast.success('user updated successfully');
-      refetch();
-      navigate('/admin/userlist');
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
-    }
+    updateUser(
+      { userId, name, email, isAdmin },
+      {
+        onSuccess: () => {
+          toast.success('user updated successfully');
+          refetch();
+          navigate('/admin/userlist');
+        },
+        onError: (err) => {
+          toast.error(err?.response?.data?.detail || err.message);
+        },
+      }
+    );
   };
 
   useEffect(() => {

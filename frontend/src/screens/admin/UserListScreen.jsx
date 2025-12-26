@@ -4,25 +4,28 @@ import { FaTrash, FaEdit, FaCheck, FaTimes } from 'react-icons/fa';
 import Message from '../../components/Message';
 import Loader from '../../components/Loader';
 import {
-  useDeleteUserMutation,
-  useGetUsersQuery,
-} from '../../slices/usersApiSlice';
+  useDeleteUser,
+  useUsers,
+} from '../../hooks';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 
 const UserListScreen = () => {
-  const { data: users, refetch, isLoading, error } = useGetUsersQuery();
+  const { data: users, refetch, isLoading, error } = useUsers();
 
-  const [deleteUser] = useDeleteUserMutation();
+  const { mutate: deleteUser } = useDeleteUser();
 
   const deleteHandler = async (id) => {
     if (window.confirm('Are you sure')) {
-      try {
-        await deleteUser(id);
-        refetch();
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+      deleteUser(id, {
+        onSuccess: () => {
+          refetch();
+          toast.success('User deleted');
+        },
+        onError: (err) => {
+          toast.error(err?.response?.data?.detail || err.message);
+        },
+      });
     }
   };
 

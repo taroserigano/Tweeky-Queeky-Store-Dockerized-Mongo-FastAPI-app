@@ -6,10 +6,10 @@ import Loader from '../../components/Loader';
 import FormContainer from '../../components/FormContainer';
 import { toast } from 'react-toastify';
 import {
-  useGetProductDetailsQuery,
-  useUpdateProductMutation,
-  useUploadProductImageMutation,
-} from '../../slices/productsApiSlice';
+  useProductDetails,
+  useUpdateProduct,
+  useUploadProductImage,
+} from '../../hooks/useProductQueries';
 
 const ProductEditScreen = () => {
   const { id: productId } = useParams();
@@ -25,22 +25,20 @@ const ProductEditScreen = () => {
   const {
     data: product,
     isLoading,
-    refetch,
     error,
-  } = useGetProductDetailsQuery(productId);
+  } = useProductDetails(productId);
 
-  const [updateProduct, { isLoading: loadingUpdate }] =
-    useUpdateProductMutation();
+  const { mutate: updateProduct, isLoading: loadingUpdate } = useUpdateProduct();
 
-  const [uploadProductImage, { isLoading: loadingUpload }] =
-    useUploadProductImageMutation();
+  const { mutate: uploadProductImage, isLoading: loadingUpload } =
+    useUploadProductImage();
 
   const navigate = useNavigate();
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    try {
-      await updateProduct({
+    updateProduct(
+      {
         productId,
         name,
         price,
@@ -49,13 +47,17 @@ const ProductEditScreen = () => {
         category,
         description,
         countInStock,
-      }).unwrap(); // NOTE: here we need to unwrap the Promise to catch any rejection in our catch block
-      toast.success('Product updated');
-      refetch();
-      navigate('/admin/productlist');
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success('Product updated');
+          navigate('/admin/productlist');
+        },
+        onError: (err) => {
+          toast.error(err?.response?.data?.detail || err.message);
+        },
+      }
+    );
   };
 
   useEffect(() => {
@@ -73,13 +75,15 @@ const ProductEditScreen = () => {
   const uploadFileHandler = async (e) => {
     const formData = new FormData();
     formData.append('image', e.target.files[0]);
-    try {
-      const res = await uploadProductImage(formData).unwrap();
-      toast.success(res.message);
-      setImage(res.image);
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
-    }
+    uploadProductImage(formData, {
+      onSuccess: (res) => {
+        toast.success(res.message);
+        setImage(res.image);
+      },
+      onError: (err) => {
+        toast.error(err?.response?.data?.detail || err.message);
+      },
+    });
   };
 
   return (

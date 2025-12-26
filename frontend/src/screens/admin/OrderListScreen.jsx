@@ -2,11 +2,11 @@ import { Table, Button } from 'react-bootstrap';
 import { FaTimes } from 'react-icons/fa';
 import Message from '../../components/Message';
 import Loader from '../../components/Loader';
-import { useGetOrdersQuery } from '../../slices/ordersApiSlice';
+import { useOrders } from '../../hooks/useOrderQueries';
 import { Link } from 'react-router-dom';
 
 const OrderListScreen = () => {
-  const { data: orders, isLoading, error } = useGetOrdersQuery();
+  const { data: orders, isLoading, error } = useOrders();
 
   return (
     <>

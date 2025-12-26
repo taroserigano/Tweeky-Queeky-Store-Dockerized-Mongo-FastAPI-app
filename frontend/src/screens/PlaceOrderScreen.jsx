@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Message from '../components/Message';
 import CheckoutSteps from '../components/CheckoutSteps';
 import Loader from '../components/Loader';
-import { useCreateOrderMutation } from '../slices/ordersApiSlice';
+import { useCreateOrder } from '../hooks/useOrderQueries';
 import { clearCartItems } from '../slices/cartSlice';
 
 const PlaceOrderScreen = () => {
@@ -14,7 +14,7 @@ const PlaceOrderScreen = () => {
 
   const cart = useSelector((state) => state.cart);
 
-  const [createOrder, { isLoading, error }] = useCreateOrderMutation();
+  const { mutate: createOrder, isLoading, error } = useCreateOrder();
 
   useEffect(() => {
     if (!cart.shippingAddress.address) {
@@ -26,8 +26,8 @@ const PlaceOrderScreen = () => {
 
   const dispatch = useDispatch();
   const placeOrderHandler = async () => {
-    try {
-      const res = await createOrder({
+    createOrder(
+      {
         orderItems: cart.cartItems,
         shippingAddress: cart.shippingAddress,
         paymentMethod: cart.paymentMethod,
@@ -35,12 +35,17 @@ const PlaceOrderScreen = () => {
         shippingPrice: cart.shippingPrice,
         taxPrice: cart.taxPrice,
         totalPrice: cart.totalPrice,
-      }).unwrap();
-      dispatch(clearCartItems());
-      navigate(`/order/${res._id}`);
-    } catch (err) {
-      toast.error(err);
-    }
+      },
+      {
+        onSuccess: (res) => {
+          dispatch(clearCartItems());
+          navigate(`/order/${res._id}`);
+        },
+        onError: (err) => {
+          toast.error(err?.response?.data?.detail || err.message);
+        },
+      }
+    );
   };
 
   return (

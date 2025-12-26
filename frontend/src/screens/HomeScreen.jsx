@@ -1,6 +1,6 @@
 import { Row, Col } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
-import { useGetProductsQuery } from '../slices/productsApiSlice';
+import { useProducts } from '../hooks/useProductQueries';
 import { Link } from 'react-router-dom';
 import Product from '../components/Product';
 import Loader from '../components/Loader';
@@ -14,10 +14,7 @@ import { Container } from 'react-bootstrap';
 const HomeScreen = () => {
   const { pageNumber, keyword } = useParams();
 
-  const { data, isLoading, error } = useGetProductsQuery({
-    keyword,
-    pageNumber,
-  });
+  const { data, isLoading, error } = useProducts(keyword, pageNumber);
 
   return (
     <>

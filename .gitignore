@@ -92,3 +92,8 @@ __pycache__/
 # Docker volumes
 postgres_data/
 mongo_data/
+
+# Markdown files (except README)
+*.md
+!README.md
+!**/README.md

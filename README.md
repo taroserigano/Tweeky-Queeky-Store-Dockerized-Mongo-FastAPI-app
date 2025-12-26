@@ -127,6 +127,8 @@ A production-ready, full-stack e-commerce application showcasing modern web deve
 
 ## 🚀 Quick Start
 
+> 📘 **Port Configuration:** The app automatically detects whether it's running locally or in Docker and configures ports accordingly. See [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) for detailed environment configuration.
+
 ### 🐳 Docker Deployment (Recommended for Production)
 
 **One-Command Setup:**
@@ -196,7 +198,32 @@ npm start
 # Frontend running at http://localhost:3000
 ```
 
-### 📋 Prerequisites
+### � Switching Between Local and Docker
+
+**No configuration changes needed!** The app automatically detects the environment.
+
+**From Local to Docker:**
+
+```bash
+# Stop local servers (Ctrl+C in both terminals)
+# Then start Docker
+docker-compose up -d
+```
+
+**From Docker to Local:**
+
+```bash
+# Stop Docker containers
+docker-compose down
+
+# Start local servers (2 terminals)
+# Terminal 1: uvicorn main:app --reload --port 5000
+# Terminal 2: cd frontend && npm start
+```
+
+Access: http://localhost:3000 (works the same in both environments)
+
+### �📋 Prerequisites
 
 | Requirement               | Version   | Purpose                       |
 | ------------------------- | --------- | ----------------------------- |
