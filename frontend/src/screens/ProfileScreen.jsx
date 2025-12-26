@@ -37,9 +37,6 @@ const ProfileScreen = () => {
     } else {
       updateProfile(
         {
-          // NOTE: here we don't need the _id in the request payload as this is
-          // not used in our controller.
-          // _id: userInfo._id,
           name,
           email,
           password,
