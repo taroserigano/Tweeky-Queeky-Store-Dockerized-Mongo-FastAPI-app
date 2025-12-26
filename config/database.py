@@ -7,7 +7,6 @@ async def init_db():
     """Initialize database connection"""
     client = AsyncIOMotorClient(settings.MONGO_URI)
     
-    # Import models here to avoid circular imports
     from models.user import User
     from models.product import Product, Review
     from models.order import Order
@@ -20,4 +19,4 @@ async def init_db():
 
 async def close_db():
     """Close database connection"""
-    pass  # Beanie handles this automatically
+    pass

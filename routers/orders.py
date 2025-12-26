@@ -26,14 +26,11 @@ async def add_order_items(
             detail="No order items"
         )
     
-    # Get ordered items from database to verify prices
     item_ids = [ObjectId(item.product) for item in order_data.order_items]
     items_from_db = await Product.find({"_id": {"$in": item_ids}}).to_list()
     
-    # Create a map for quick lookup
     db_items_map = {str(item.id): item for item in items_from_db}
     
-    # Map order items with correct prices from database
     db_order_items = []
     for item_from_client in order_data.order_items:
         matching_item = db_items_map.get(item_from_client.product)
@@ -47,14 +44,12 @@ async def add_order_items(
             "name": item_from_client.name,
             "qty": item_from_client.qty,
             "image": item_from_client.image,
-            "price": matching_item.price,  # Use price from DB
+            "price": matching_item.price,
             "product": ObjectId(item_from_client.product)
         })
     
-    # Calculate prices
     prices = calc_prices(db_order_items)
     
-    # Convert dict items to OrderItem objects
     order_items_objects = [
         OrderItem(
             name=item["name"],
@@ -66,7 +61,6 @@ async def add_order_items(
         for item in db_order_items
     ]
     
-    # Create order
     order = Order(
         order_items=order_items_objects,
         user=current_user.id,
@@ -85,7 +79,6 @@ async def add_order_items(
     
     await order.save()
     
-    # Return the serialized order directly (frontend expects direct order object)
     return serialize_order(order)
 
 
@@ -127,7 +120,6 @@ async def update_order_to_paid(
     current_user: User = Depends(get_current_user)
 ):
     """Update order to paid"""
-    # Extract payment ID from various possible locations in PayPal response
     payment_id = payment_data.get('id') or payment_data.get('transaction_id') or payment_data.get('paymentID')
     payment_status = payment_data.get('status', 'COMPLETED')
     
@@ -137,7 +129,6 @@ async def update_order_to_paid(
             detail="Payment ID not found"
         )
     
-    # Get the order
     try:
         order = await Order.get(ObjectId(order_id))
     except Exception as e:
@@ -152,14 +143,12 @@ async def update_order_to_paid(
             detail="Order not found"
         )
     
-    # Check if order is already paid
     if order.is_paid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Order is already paid"
         )
     
-    # Check if this transaction has been used before
     is_new = await check_if_new_transaction(Order, payment_id)
     
     if not is_new:
@@ -168,28 +157,23 @@ async def update_order_to_paid(
             detail="Transaction has been used before"
         )
     
-    # Verify payment with PayPal (optional in development mode)
     try:
         payment_info = await verify_paypal_payment(payment_id)
         
         if not payment_info["verified"]:
             payment_info["value"] = str(order.total_price)
         
-        # Verify correct amount was paid
         paid_correct_amount = str(order.total_price) == payment_info["value"]
         if not paid_correct_amount:
-            # Allow amount mismatch in development mode
             pass
             
     except Exception as e:
-        # Continue anyway for development mode
         pass
     
     # Update order payment status
     order.is_paid = True
     order.paid_at = datetime.utcnow()
     
-    # Extract email from payer object if available
     email = payment_data.get('email_address', '')
     if not email and payment_data.get('payer'):
         payer = payment_data.get('payer', {})
@@ -197,7 +181,6 @@ async def update_order_to_paid(
     
     update_time = payment_data.get('update_time') or datetime.utcnow().isoformat()
     
-    # Store payment result
     order.payment_result = PaymentResult(
         id=payment_id,
         status=payment_status,
@@ -205,7 +188,6 @@ async def update_order_to_paid(
         email_address=email
     )
     
-    # Save to database
     try:
         await order.save()
     except Exception as e:
@@ -214,7 +196,6 @@ async def update_order_to_paid(
             detail=f"Failed to update order: {str(e)}"
         )
     
-    # Verify the order was updated
     updated_order = await Order.get(ObjectId(order_id))
     
     return OrderResponse(**serialize_order(updated_order))

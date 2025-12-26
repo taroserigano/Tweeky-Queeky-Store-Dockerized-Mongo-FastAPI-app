@@ -14,14 +14,12 @@ async def get_current_user(request: Request) -> User:
         detail="Not authorized, no token",
     )
     
-    # Get JWT from cookie
     token = request.cookies.get("jwt")
     
     if not token:
         raise credentials_exception
     
     try:
-        # Decode JWT
         payload = jwt.decode(
             token, 
             settings.JWT_SECRET, 
@@ -38,7 +36,6 @@ async def get_current_user(request: Request) -> User:
             detail="Not authorized, token failed",
         )
     
-    # Get user from database
     user = await User.get(user_id)
     
     if user is None:
@@ -59,7 +56,6 @@ async def require_admin(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
-# Optional dependency for routes that may or may not require auth
 async def get_current_user_optional(request: Request) -> Optional[User]:
     """
     Dependency to get current user if authenticated, None otherwise

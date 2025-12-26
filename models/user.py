@@ -39,9 +39,7 @@ class User(Document):
 
     async def save(self, *args, **kwargs):
         """Override save to hash password if modified"""
-        # Check if this is a new document or password was modified
         if self.id is None or self.is_changed:
-            # Only hash if password appears to be plain text (not already hashed)
             if not self.password.startswith("$2b$"):
                 self.hash_password()
         self.updated_at = datetime.utcnow()

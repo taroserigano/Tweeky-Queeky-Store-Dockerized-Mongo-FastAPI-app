@@ -7,11 +7,9 @@ const SearchBox = () => {
   const navigate = useNavigate();
   const { keyword: urlKeyword } = useParams();
 
-  // FIX: uncontrolled input - urlKeyword may be undefined
   const [keyword, setKeyword] = useState(urlKeyword || '');
   const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);
 
-  // Debounce effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedKeyword(keyword);
@@ -22,7 +20,6 @@ const SearchBox = () => {
     };
   }, [keyword]);
 
-  // Auto-search on debounced keyword change
   useEffect(() => {
     if (debouncedKeyword) {
       navigate(`/search/${debouncedKeyword.trim()}`);

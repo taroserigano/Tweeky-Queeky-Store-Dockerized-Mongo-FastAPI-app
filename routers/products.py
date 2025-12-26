@@ -62,12 +62,10 @@ async def get_products(
     page_size = settings.PAGINATION_LIMIT
     skip = page_size * (page_number - 1)
     
-    # Build query
     query = {}
     if keyword:
         query = {"name": {"$regex": keyword, "$options": "i"}}
     
-    # Get count and products
     count = await Product.find(query).count()
     products = await Product.find(query, fetch_links=True).skip(skip).limit(page_size).to_list()
     
@@ -106,7 +104,6 @@ async def create_product(
     current_user: User = Depends(require_admin)
 ):
     """Create a product (Admin only)"""
-    # Use default values if no data provided
     if product_data is None:
         product_data = ProductCreate()
     
@@ -214,11 +211,9 @@ async def create_product_review(
             detail="Product not found"
         )
     
-    # Ensure reviews list is initialized
     if product.reviews is None:
         product.reviews = []
     
-    # Check if user already reviewed
     already_reviewed = any(
         str(review.user) == str(current_user.id) 
         for review in product.reviews
@@ -230,7 +225,6 @@ async def create_product_review(
             detail="Product already reviewed"
         )
     
-    # Create review document
     review = Review(
         name=current_user.name,
         rating=review_data.rating,
@@ -238,38 +232,28 @@ async def create_product_review(
         user=current_user.id
     )
     
-    # Save review first - MUST save before linking
     await review.insert()
     
-    # CRITICAL FIX: Refetch product WITHOUT fetch_links first to get Link objects
     product_with_links = await Product.get(ObjectId(product_id))
     
-    # Build new reviews list preserving existing Link objects
     new_reviews_list = []
     
-    # If product has existing reviews as Links, keep them as Links
     if product_with_links.reviews:
         for existing_link in product_with_links.reviews:
             new_reviews_list.append(existing_link)
     
-    # Add the new review (Beanie will convert Review to Link automatically)
     new_reviews_list.append(review)
     
-    # Assign the complete list
     product_with_links.reviews = new_reviews_list
     
-    # Update review count and rating
     product_with_links.num_reviews = len(new_reviews_list)
     
-    # Calculate average rating - need to fetch reviews for this
     product_fetched = await Product.get(ObjectId(product_id), fetch_links=True)
     if product_fetched.reviews:
         total_rating = sum(r.rating for r in product_fetched.reviews)
-        # Add new review rating
         total_rating += review.rating
         product_with_links.rating = total_rating / (len(product_fetched.reviews) + 1)
     
-    # Save with link_rule to write all links
     await product_with_links.save(link_rule="WRITE")
     
     return {"message": "Review added"}

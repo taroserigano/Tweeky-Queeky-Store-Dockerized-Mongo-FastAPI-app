@@ -1,26 +1,3 @@
-/**
- * Header Component
- * 
- * Main navigation bar with responsive design and user authentication state.
- * Demonstrates best practices for:
- * - Redux state management (cart, auth)
- * - React Query mutations (logout)
- * - Theme switching functionality
- * - Conditional rendering based on user role
- * 
- * Features:
- * - Cart badge with item count
- * - User dropdown with profile/orders links
- * - Admin dropdown (conditional)
- * - Dark/Light theme toggle
- * - Secure logout with cache cleanup
- * 
- * @component
- * @param {Object} props
- * @param {string} props.theme - Current theme ('light' or 'dark')
- * @param {Function} props.onToggleTheme - Theme toggle handler
- */
-
 import {
   Navbar,
   Nav,
@@ -125,7 +102,6 @@ const Header = ({ theme = 'light', onToggleTheme }) => {
                 </Nav.Link>
               )}
 
-              {/* Admin Links */}
               {userInfo && userInfo.isAdmin && (
                 <NavDropdown
                   title='Admin'
