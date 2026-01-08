@@ -122,7 +122,7 @@ A production-ready, full-stack e-commerce application showcasing modern web deve
 
 **Architecture Highlights:**
 
-- ✅ **Microservices Design** - Separate containers for frontend, backend, database
+- ✅ **Multi-Container Architecture** - Separate containers for frontend, backend, and database
 - ✅ **Cloud-Ready** - MongoDB Atlas for scalable, managed database hosting
 - ✅ **Production Optimized** - Multi-stage Docker builds, minimized image sizes
 - ✅ **Environment Isolation** - Docker networking, volume persistence, secret management
