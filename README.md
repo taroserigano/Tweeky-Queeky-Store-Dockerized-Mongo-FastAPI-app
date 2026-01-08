@@ -88,7 +88,7 @@ A production-ready, full-stack e-commerce application showcasing modern web deve
 
 **🎯 Advanced React Patterns & Practices:**
 
-- ✅ **Hooks Architecture** - Custom hooks for business logic (`useAuth`, `useCart`, `useOrderHistory`)
+- ✅ **Custom API Hooks** - Domain hooks for API access (orders/products/users)
 - ✅ **Redux Toolkit Slices** - Modular state with `createSlice`, `createAsyncThunk`, `createEntityAdapter`
 - ✅ **RTK Query Integration** - API slice with automatic cache management and tag invalidation
 - ✅ **Component Composition** - HOCs, render props, and compound components for reusability
@@ -146,7 +146,7 @@ A production-ready, full-stack e-commerce application showcasing modern web deve
 - **⭐ Product Review System** - Star ratings, user reviews with optimistic UI updates and validation
 - **🔍 Smart Search** - Debounced search with real-time filtering, keyword highlighting, and suggestions
 - **📱 Responsive Dashboard** - Mobile-optimized admin panel with responsive tables and infinite scroll
-- **🎨 Custom Hooks Library** - `useAuth`, `useCart`, `useDebounce`, `useLocalStorage`, `useToast`
+- **🎨 Custom API Hooks** - Centralized React Query hooks in `frontend/src/hooks/`
 - **🚀 Performance Optimized** - Code splitting, lazy loading, memoization, and bundle optimization
 - **♿ Accessibility (A11y)** - ARIA labels, keyboard navigation, screen reader support, semantic HTML
 - **🎭 Advanced UI Components**:
@@ -231,13 +231,11 @@ frontend/src/screens/
 
 **Reusable Business Logic:**
 
-- **`useAuth()`** - Authentication state and logout handler
-- **`useCart()`** - Cart operations (add, remove, update quantity)
-- **`useDebounce(value, delay)`** - Input debouncing for search
-- **`useLocalStorage(key, initialValue)`** - Sync state with localStorage
-- **`useToast()`** - Toast notification wrapper
-- **`useMediaQuery(query)`** - Responsive design hooks
-- **`usePageTitle(title)`** - Dynamic document title updates
+These hooks are implemented in `frontend/src/hooks/` and re-exported from `frontend/src/hooks/index.js`.
+
+- **Orders**: `useCreateOrder`, `useOrderDetails`, `usePayOrder`, `usePayPalClientId`, `useMyOrders`, `useOrders`, `useDeliverOrder`
+- **Products**: `useProducts`, `useProductDetails`, `useTopProducts`, `useCreateReview`, `useCreateProduct`, `useUpdateProduct`, `useDeleteProduct`, `useUploadProductImage`
+- **Users**: `useLogin`, `useRegister`, `useLogout`, `useUpdateProfile`, `useUsers`, `useUserDetails`, `useDeleteUser`, `useUpdateUser`
 
 ### 🎨 Styling & Theming
 
